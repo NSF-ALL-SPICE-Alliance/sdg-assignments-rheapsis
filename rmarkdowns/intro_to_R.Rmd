@@ -107,6 +107,13 @@ my_age + 5 # how old will you be in 5 years?
 
 #### <span style="color: red;">Challenge 1</span>
 Create a my_name variable with your name assigned to the variable instead of "Victoria DelaCruz". Then, create a my_age variable with your age. 
+```{r}
+my_name <- "Rhea Jose"
+
+my_age <- 24
+
+my_age + 5 
+```
 
 #### Different Types of Data
 
@@ -205,9 +212,18 @@ In the code chunk below, we use the `read_csv()` function to read in the csv fil
 sdr_data <- read_csv(here("data/SDR-2023-Data.csv")) # assigning the dataset to a variable so that we can look at/reference it
 # to view the whole dataset you can click on sdr_data in your environment pane at the top right of your screen)
 ```
+
+```{r}
+sdr_data <- read_csv(here("data/SDR-2023-Data.csv"))
+```
+
 Cleaning names
 ```{r}
 sdr_data <- clean_names(sdr_data) # cleaning column names 
+```
+
+```{r}
+sdr_data <- clean_names(sdr_data)
 ```
 
 Note: In programming, we don't use spaces in names (usually, if you want to use a space between words, you'd use an underscore, slash, or other punctuation). That's why we used the `clean_names` function from the `janitor` package, to clean our column names and replace spaces with underscores.
@@ -220,7 +236,12 @@ Understanding what your data looks like is crucial to the data analysis process.
 head(sdr_data) # view the first couple of rows and columns of your dataset
 ```
 
+```{r}
+head(sdr_data)
+```
+
 As we talked about earlier, it's always helpful to know what types of data you're handling. The code below shows us what type of data type each column holds (for ex., chr = character, num = numeric), the number of rows (you'll see that it's 206:666, meaning 206 rows and 666 columns), and some of the first few values for each column. 
+
 
 ```{r, include = FALSE}
 data_structure <- str(sdr_data) # looking at the data structure
@@ -234,9 +255,17 @@ column_names <- as.list(colnames(sdr_data))  # click on column_names in your env
 
 ```
 
+```{r}
+column_names <- as.list(colnames(sdr_data))
+```
+
 - How many rows and columns
 ```{r}
 dim(sdr_data) # looking at dimensions
+```
+
+```{r}
+dim(sdr_data)
 ```
 
 - How many NA values are there in the dataset?
@@ -247,7 +276,18 @@ NA values represent missing values in our data. It's important to know how many 
 library(naniar) # helpful package to view missing data
 ```
 
+```{r}
+library(naniar)
+```
+
 Note: if you run into an error loading the `naniar` package, run the install.packages() code in the console that we went through earlier
+
+```{r}
+sdr_data %>% 
+  miss_var_summary() %>% 
+  arrange(desc(pct_miss))
+```
+
 
 ```{r}
 sdr_data %>% 
@@ -266,11 +306,22 @@ Let's say we're interested in looking at the different values for the column *Go
 ```{r}
 table(sdr_data$goal_7_dash) # after the $ operator, write the name of the column you're interested in exploring
 ```
+
+```{r}
+table(sdr_data$goal_7_dash)
+```
+
+
 Awesome! Let's try to input two columns to explore further: 
 
 ```{r}
 table(sdr_data$goal_7_dash, sdr_data$regions_used_for_the_sdr) # looking at 2 columns, separated by a ,
 ```
+
+```{r}
+table(sdr_data$goal_7_dash, sdr_data$regions_used_for_the_sdr)
+```
+
 Now you can see how many countries in each region got green, orange, red, and yellow scores for SDG Goal 7. We've also used 8 new functions (View, read_csv, head, dim, etc.). Great job!
 
 #### Cleaning and Manipulating Data 
@@ -287,6 +338,12 @@ sdr_data %>%
   select(goal_3_score, goal_4_score)
 ```
 
+
+```{r}
+sdr_data %>% 
+  select(goal_3_score, goal_4_score)
+```
+
 You'll notice we used the pipe operator ` %>% ` after the name of the dataframe, and then listed the columns we were interested in the select() function
 
 What if we want to subset specific rows? We can do this by using the filter function. 
@@ -294,11 +351,26 @@ What if we want to subset specific rows? We can do this by using the filter func
 #### <span style="color: red;">Challenge 2</span>
 Using the `select()` function, select two new SDG goal scores. Assign it to a variable named `SDG_scores`. 
 
+```{r}
+SDG_scores <- sdr_data %>% 
+  select(goal_4_score, goal_14_score)
+
+rm(SDG_scores)
+
+SDG_scores = sdr_data %>%
+  select(goal_4_score, goal_14_score)
+```
+
 *2. filter()*
 
 Similarly to select, `filter()` can be used to extract specific rows. Let's try this out by filtering our data for those within the Oceania region.
 
 In order to do this, we write out the column name "regions_used_for_the_sdr" followed by == and then "Oceania". 
+
+```{r}
+sdr_data %>% 
+  filter(regions_used_for_the_sdr == "Oceania")
+```
 
 ```{r}
 sdr_data %>% 
@@ -313,6 +385,15 @@ Notes:
 
 #### <span style="color: red;">Challenge 3</span>
 Using the `filter()` function, filter for another region other than Oceania. Assign it to a variable named `new_region`. 
+
+```{r}
+new_region = sdr_data %>% 
+  filter(regions_used_for_the_sdr == ("East & South Asia"))
+
+```
+
+
+
 
 **Important**
 
