@@ -222,9 +222,6 @@ Cleaning names
 sdr_data <- clean_names(sdr_data) # cleaning column names 
 ```
 
-```{r}
-sdr_data <- clean_names(sdr_data)
-```
 
 Note: In programming, we don't use spaces in names (usually, if you want to use a space between words, you'd use an underscore, slash, or other punctuation). That's why we used the `clean_names` function from the `janitor` package, to clean our column names and replace spaces with underscores.
 
@@ -236,9 +233,6 @@ Understanding what your data looks like is crucial to the data analysis process.
 head(sdr_data) # view the first couple of rows and columns of your dataset
 ```
 
-```{r}
-head(sdr_data)
-```
 
 As we talked about earlier, it's always helpful to know what types of data you're handling. The code below shows us what type of data type each column holds (for ex., chr = character, num = numeric), the number of rows (you'll see that it's 206:666, meaning 206 rows and 666 columns), and some of the first few values for each column. 
 
@@ -255,18 +249,12 @@ column_names <- as.list(colnames(sdr_data))  # click on column_names in your env
 
 ```
 
-```{r}
-column_names <- as.list(colnames(sdr_data))
-```
 
 - How many rows and columns
 ```{r}
 dim(sdr_data) # looking at dimensions
 ```
 
-```{r}
-dim(sdr_data)
-```
 
 - How many NA values are there in the dataset?
 
@@ -276,9 +264,6 @@ NA values represent missing values in our data. It's important to know how many 
 library(naniar) # helpful package to view missing data
 ```
 
-```{r}
-library(naniar)
-```
 
 Note: if you run into an error loading the `naniar` package, run the install.packages() code in the console that we went through earlier
 
@@ -288,12 +273,6 @@ sdr_data %>%
   arrange(desc(pct_miss))
 ```
 
-
-```{r}
-sdr_data %>% 
-  miss_var_summary() %>% 
-  arrange(desc(pct_miss))
-```
 
 Note: In the above code, we are using the `%>%` (pipe) operator. This allows us to connect functions within our code so that it performs each step at a time. We start off with our data (sdr_data), then use the pipe operator to use the miss_var_summary() function, and then again to use the arrange() function. 
 
@@ -307,9 +286,6 @@ Let's say we're interested in looking at the different values for the column *Go
 table(sdr_data$goal_7_dash) # after the $ operator, write the name of the column you're interested in exploring
 ```
 
-```{r}
-table(sdr_data$goal_7_dash)
-```
 
 
 Awesome! Let's try to input two columns to explore further: 
@@ -318,9 +294,6 @@ Awesome! Let's try to input two columns to explore further:
 table(sdr_data$goal_7_dash, sdr_data$regions_used_for_the_sdr) # looking at 2 columns, separated by a ,
 ```
 
-```{r}
-table(sdr_data$goal_7_dash, sdr_data$regions_used_for_the_sdr)
-```
 
 Now you can see how many countries in each region got green, orange, red, and yellow scores for SDG Goal 7. We've also used 8 new functions (View, read_csv, head, dim, etc.). Great job!
 
@@ -339,11 +312,6 @@ sdr_data %>%
 ```
 
 
-```{r}
-sdr_data %>% 
-  select(goal_3_score, goal_4_score)
-```
-
 You'll notice we used the pipe operator ` %>% ` after the name of the dataframe, and then listed the columns we were interested in the select() function
 
 What if we want to subset specific rows? We can do this by using the filter function. 
@@ -352,13 +320,8 @@ What if we want to subset specific rows? We can do this by using the filter func
 Using the `select()` function, select two new SDG goal scores. Assign it to a variable named `SDG_scores`. 
 
 ```{r}
-SDG_scores <- sdr_data %>% 
-  select(goal_4_score, goal_14_score)
-
-rm(SDG_scores)
-
 SDG_scores = sdr_data %>%
-  select(goal_4_score, goal_14_score)
+  select(goal_6_score, goal_14_score)
 ```
 
 *2. filter()*
@@ -366,11 +329,6 @@ SDG_scores = sdr_data %>%
 Similarly to select, `filter()` can be used to extract specific rows. Let's try this out by filtering our data for those within the Oceania region.
 
 In order to do this, we write out the column name "regions_used_for_the_sdr" followed by == and then "Oceania". 
-
-```{r}
-sdr_data %>% 
-  filter(regions_used_for_the_sdr == "Oceania")
-```
 
 ```{r}
 sdr_data %>% 
@@ -388,7 +346,7 @@ Using the `filter()` function, filter for another region other than Oceania. Ass
 
 ```{r}
 new_region = sdr_data %>% 
-  filter(regions_used_for_the_sdr == ("East & South Asia"))
+  filter(regions_used_for_the_sdr == "East & South Asia")
 
 ```
 
