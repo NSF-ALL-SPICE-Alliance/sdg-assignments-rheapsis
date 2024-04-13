@@ -76,7 +76,7 @@ We start with the same exact code and add to it with `+`
 ggplot(sdr_data, aes(x = goal_4_score, fill=regions_used_for_the_sdr)) +
   geom_histogram() +
   theme_minimal() +
-  scale_fill_viridis_d() +
+  scale_fill_viridis_d(option = "magma") +
   labs(title = "Distributions of SDG 4 Scores",
        x = "SDG 4 Score",
        y = "Number of Countries",
@@ -108,7 +108,7 @@ Interactive visualizations are a really exciting part of data science! Interacti
 goal_4_histogram <- ggplot(sdr_data, aes(x = goal_4_score, fill=regions_used_for_the_sdr)) +
   geom_histogram() +
   theme_minimal() +
-  scale_fill_viridis_d() +
+  scale_fill_viridis_d(option = "magma") +
   labs(title = "Distributions of SDG 4 Scores",
        x = "SDG 4 Score",
        y = "Number of Countries",
@@ -146,6 +146,18 @@ ggplot(data = sdr_data, aes(x= goal_3_score, y = goal_4_score, color = regions_u
 
   - hint: you will have to assign a name to the plot
 
+```{r}
+goal_3_and_4_scatterplot <- ggplot(data = sdr_data, aes(x= goal_3_score, y = goal_4_score, color = regions_used_for_the_sdr)) +
+  geom_point() +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "inferno") +
+  labs(title = "Distribution of Goals 3 and 4",
+       x = "SDG 3 Score",
+       y = "SDG 4 Score",
+       color="Regions")
+
+ggplotly(goal_3_and_4_scatterplot)
+```
 
 
 ### Creating interactive maps with `leaflet`
@@ -158,6 +170,9 @@ This takes a few fun steps to do
       
     - We use the ne_countries() function to access the data and we assign it the name *world*
 
+```{r}
+ install.packages("rnaturalearthdata")
+```
 
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
@@ -272,6 +287,18 @@ Can you edit the code chunk above that generates the map to:
 - Change the color palette from "YlOrRd" to another palette
   - Hint: [look under the RColorBrewer Palettes here](https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/)
     
+```{r}
+mytext <- paste(
+    "Country: ", sdr_data_world_joined$country,"<br/>", 
+    "Goal 10 Score: ", round(sdr_data_world_joined$goal_7_score, 2), 
+    sep="") %>%
+  lapply(htmltools::HTML)
+
+leaflet(sdr_data_world_joined) %>% 
+  addTiles()  %>% 
+  setView( lat=10, lng=0 , zoom=2) %>%
+  addPolygons(stroke = FALSE, fillOpacity = 0.5, smoothFactor = 0.5, color = ~colorQuantile("RdPu", goal_10_score)(goal_10_score), label = mytext)
+```
 
 
 
