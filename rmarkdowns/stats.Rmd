@@ -220,3 +220,23 @@ ggplot(sdr_data, aes(x = goal_12_score,
       - are there any points that don't follow the trend (outliers)
         
         - which country(s) are outliers?
+        
+```{r}
+Linear_Regression_SDG_3_n_13 <- ggplot(sdr_data, aes(x = goal_8_score,
+                                                     y = goal_10_score,
+                                                     label = country)) +
+  geom_point() +
+  geom_smooth() +
+  stat_cor() +
+  theme_minimal()
+
+
+ggplotly(Linear_Regression_SDG_3_n_13)
+```
+        
+```{r}
+Based on the linear regression created above, the slope goes upward from left to right, indicating a positive correlation between SDG 8: Decent Work and Economic Growth and SDG 10: Reduced Inequalities. The p-value suggests that there is significant relationship! I think that when economies grow and create more decent jobs, space is carved for reducing income inequality and pushing for inclusive and accessible employment opportunities. The policies that promote fair access to education and employment bridges disparities. It is encouraging to see that social mobility is promoted!
+
+There are couple of outliers, for example South Africa, which is in the lower half of the plot. Their SDG 8 Score is 69.8 and their SDG 10 score is 0. The SDG 10 score may be the reason it is an outlier, due to the lack of data. But I think what is important to keep in mind is that maybe there are marginalized communities who may have not access to oocupational or educational opportunities even though it seems to have a developed economy compared to other African nations.
+```
+
