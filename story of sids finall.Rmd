@@ -140,13 +140,22 @@ k2 <- kmeans(sdr_sidsdata_imputed, centers = 2)
 fviz_cluster(k2, data = sdr_sidsdata_imputed) +
   theme_minimal()
 ```
+Based on the visualization, there could be many potential reasons as to why they are clustered the way they are. For example, clustered by regions in SIDS. In the blue triangle cluster, majority of the Pacific SIDS are grouped together. In the red circle cluster, many of the SIDS are in the Caribbean as well as the Atlantic. You could also assume they are clustered in this way due to sharing similar "vulnerabilities" with other nations in that cluster.  
 
-You can see the clusters as a data frame using the code below: 
+For a different point of view, you can see the clusters as a data frame using the code below: 
 
 ```{r}
 country_clusters <- as.data.frame(k2$cluster)
 ```
 
+Knowing a little background about the SIDS, we are going to look at SDG 2: Obesity. I want to look at this specific SDG because coming from the Pacific, obesity is prevalent among our communities. 
+
+```{r}
+ ggplot(sdr_data_sids_fin, aes(x= n_sdg2_obesity, y = country)) +
+  geom_bar(stat = "identity") +
+  labs(x = "SDG 2 Obesity", y = "Country")
+```
+ The bar chart above shows the different SDG 2 Obesity scores for each nation in the SIDS. When looking at the chart, many have lower scores for obesity in the data set, meaning that those different places have a high obesity rate. Those with scores over fifty may have low obesity rates. Some even have zero!
 
 ```{r}
 rf_obesity <- randomForest(n_sdg2_obesity ~ .,
@@ -178,6 +187,9 @@ ggplot(importance_df_top_10, aes(x = `%IncMSE`, y = reorder(variable, `%IncMSE`)
        x = "Feature Importance (% Increase in Mean Squared Error)")
 ```
 
+Intrestingly enough, the machine had predicted the following variables that contribute to obesity. First being the particulate matter in the air and second unemployment. 
+
+I want to look closely at the particulate matter. We will use the following code: 
 
 ```{r}
 pdp::partial(rf_obesity, pred.var = "n_sdg11_pm25", plot = TRUE)
@@ -188,30 +200,15 @@ pd <- pdp::partial(rf_obesity, pred.var = c("n_sdg11_pm25", "normalized_score_en
 
 plotPartial(pd)
 ```
-```{r}
-scatter_plot <- ggplot(sdr_data_sids_fin, aes(x = n_sdg11_pm25, 
-                              y = normalized_score_env_disastcost,
-                              label = country)) +
-  geom_point()
-ggplotly(scatter_plot)
-```
-
+In this visualization, the y axis is SDG 11 and the x axis shows the environmental disaster costs. I chose these two because I would like to see if there would be a synergy between all three variables. The color key is the models prediction of SDG 2 Obesity.
 
 
 In this visualization, the x-axis is SDG 11 indicator of the annual mean concentration of particulate matter of less than 2.5 microns in diameter and the y-axis is the environmental natural disaster cost vulnerability indicator score. The colors are the predicted scores of obesity.
+The model's prediction is very interesting. As the SDG 11 and natural disaster indicators scores increase, the obesity score decreases. This is highly due to some nations in the data set have the lowest normalized scores for obesity (highest rates of obesity) with low scores of particulate matter. 
 
-The model's prediction is very interesting. As the SDG 11 and natural disaster indicators scores increase, the obesity score decreases. Now, we will take a look at a different variable that was not in the top 10 list, food imports. 
 
-```{r}
-pdp::partial(rf_obesity, pred.var = "normalized_score_eco_foodim", plot = TRUE)
-```
 
- 
-```{r}
-pd <- pdp::partial(rf_obesity, pred.var = c("n_sdg11_pm25", "normalized_score_eco_foodim"))
 
-plotPartial(pd)
-```
 
 
 
