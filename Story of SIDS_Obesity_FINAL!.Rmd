@@ -1,0 +1,219 @@
+---
+title: "Story of SIDS: SDG Analytics Final Project"
+author: "Rhea Jose"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Load in Packages used for the analysis
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+library(leaflet)
+library(plotly)
+library(readr)
+library(vembedr)
+library(naniar)
+library(missRanger)
+library(factoextra)
+library(randomForest)
+library(pdp)
+```
+
+### Who am I 
+
+Alii, Hafa Adai, Aloha everyone. My name is Rhea Jose. I am a daughter of Oceania. I am a Palauan woman, born and raised on the island of Guahan, currently residing on the island of O'ahu. I will be telling a story about the Small Island Developing States, or SIDS through the lens of the United Nations' 17 Sustainable Development Goals and data science visualizations.
+
+Before I begin, I would like to express gratitude to Connor and Victoria for this experience in SDG Analytics in R. And thank you NSF All Spice Alliance and the United Nations CIFAL Center of Honolulu for hosting us and the certificate. 
+
+
+### The United Nations 17 Sustainable Development Goals (SDGS)
+
+The United Nations 17 Sustainable Development Goals (SDGS) are an evolution of the Millenial Goals placed in 2015. The SDGS is a interconnected framework that reminds us of our kuleana (responsibility) to ensure peace and prosperity in our communities and the world. The goals sparks creativity and innovation when working together to seek solutions to various issues in relation to the biosphere, society and the economy. 
+
+### Small Island Developing States (SIDS)
+
+The Small Island Developing States are a "distinct group of 39 states and 18 Associate Members of United Nations regional commissions that face unique social, economic and environmental vulnerabilities. The three geographical regions in which SIDS are located are the Pacific, Carribbean, the Atlantic, the Indian Ocean, an the South China Sea". SIDS nations are on the front line of many global challenges that require not just global solutions, but place-based solutions. 
+
+Traditionally and historically, many of the SIDS, especially the Pacific, are self-sustaining groups of people. Their way of life is based on what nature provides them, especially for food. 
+
+To begin, we will look at the different countries that lie within the Small Island Developing States and their SDG data. We will be using the Sustainable Development Report for Small Island Developing States.
+
+Read in SDG Data
+
+```{r}
+sdr_data_sids <- read_csv("data/SDR-for-SIDS/SIDS-SDR-2023-data.csv")
+```
+
+```{r}
+sdr_data_sids_MSVI <- read_csv("data/SDR-for-SIDS/MSVI-Table 1.csv")
+```
+
+Clean column names of dataframe 
+
+```{r}
+sdr_data_sids <- sdr_data_sids %>%
+  clean_names()
+```
+
+```{r}
+sdr_data_sids_MSVI <- sdr_data_sids_MSVI %>%
+  clean_names()
+```
+
+```{r}
+sdr_data_sids_fin <- full_join(sdr_data_sids, sdr_data_sids_MSVI, by = "country")
+```
+
+
+Create a dataframe that only shows the country name and the normalized SDG Score. 
+
+```{r}
+sdr_sids_data_normalized_scores <- sdr_data_sids_fin %>% 
+  select(country, contains("n_sdg"), contains("normalized"))
+
+sdr_sids_data_normalized_scores <- sdr_sids_data_normalized_scores %>%
+  select(-contains("arrow_n"))
+```
+
+Pivot longer to make a dataframe with a country column, a name column (variable), and a value column for that variable & country. This will clean data to organize/arrange from the most to least unavailable data. 
+
+```{r}
+sdr_sids_data_normalized_scores_longer <- sdr_sids_data_normalized_scores %>%
+  pivot_longer(cols = !country)
+```
+
+```{r}
+missing_data_by_country <- sdr_sids_data_normalized_scores_longer %>%
+ group_by(country) %>%
+ miss_var_summary() %>% 
+ arrange(desc(pct_miss))
+
+missing_data_by_country
+```
+
+The code below will show the countries that have NA values. 
+```{r}
+completely_na_countries  <- missing_data_by_country$country[missing_data_by_country$pct_miss == 100]
+completely_na_countries
+```
+
+Hooray! The dataset is good to go since there are no countries that have NA values. Now, we want to keep the data where less than 20% of the data is missing by using the gg_miss_var function. 
+
+```{r}
+gg_miss_var(sdr_sids_data_normalized_scores, show_pct = TRUE) +
+  theme(axis.text.y = element_text(size = 8)) +
+  geom_hline(yintercept = 20, color = "steelblue", linetype = "dashed")
+```
+
+We have the opportunity to use all data provided in the dataset besides the first four, because each one falls below 5%. Now, we will impute the missing data using decision trees. The random forest method from the missRanger package will be the best to use!
+
+```{r}
+sdr_sidsdata_imputed <- missRanger(sdr_sids_data_normalized_scores)
+```
+
+Now that we have some awesome data to work with, I will be clustering the data to highlight potential relationships based on which island state is in what cluster. In order to do this, we must change the country column names to become rownames within the dataframe. 
+
+```{r}
+sdr_sidsdata_imputed <- sdr_sidsdata_imputed %>%
+  remove_rownames %>%
+  column_to_rownames(var="country")
+```
+
+Now, we will use the following functon to find out how many clusters there will be based on the data. 
+```{r}
+fviz_nbclust(sdr_sidsdata_imputed, kmeans, method = "silhouette")
+```
+In the visualization above,  we will have 2 clusters. We can visualize the clusters by running the following code:
+
+```{r}
+k2 <- kmeans(sdr_sidsdata_imputed, centers = 2)
+```
+
+```{r}
+fviz_cluster(k2, data = sdr_sidsdata_imputed) +
+  theme_minimal()
+```
+Based on the visualization, there could be many potential reasons as to why they are clustered the way they are. For example, clustered by regions in SIDS. In the blue triangle cluster, majority of the Pacific SIDS are grouped together. In the red circle cluster, many of the SIDS are in the Caribbean as well as the Atlantic. You could also assume they are clustered in this way due to sharing similar "vulnerabilities" with other nations in that cluster.  Another way to view the clusters is by an economic point of view. Are the clusters grouped in a way where they have similar economic systems? I like this type of visualization because it allows you to think deeply about why they may be grouped together.
+
+For a different point of view, you can see the clusters as a data frame using the code below: 
+
+```{r}
+country_clusters <- as.data.frame(k2$cluster)
+```
+
+Knowing a little background about the SIDS, we are going to look at SDG 2: Obesity. I want to look at this specific SDG because coming from the Pacific, obesity is prevalent among our communities. 
+
+```{r}
+ ggplot(sdr_data_sids_fin, aes(x= n_sdg2_obesity, y = country)) +
+  geom_bar(stat = "identity") +
+  labs(x = "SDG 2 Obesity", y = "Country")
+```
+ The bar chart above shows the different SDG 2 Obesity scores for each nation in the SIDS. When looking at the chart, many have lower scores for obesity in the data set, meaning that those different places have a high obesity rate. Those with scores over fifty may have low obesity rates. Some even have zero! It is interesting to see that many of the Pacific islads have a low score or do not have any data. Hopefully this would change because a lot of Pacific Islands suffer from high rates of obesity due to various reasons such as economic constraits. This could limit the access to healthier food, leading to a high consumption of cheaper, nutrient-poor foods. It could also be factors such as shifts in traditional diets due to urbanization, access to healthcare, health regulations, and education.
+ 
+
+
+```{r}
+rf_obesity <- randomForest(n_sdg2_obesity ~ .,
+                             data = sdr_sidsdata_imputed,
+                             importance = TRUE)
+```
+
+```{r}
+rf_obesity
+```
+
+```{r}
+importance_df <- as.data.frame(rf_obesity$importance)
+```
+
+```{r}
+importance_df_top_10 <- importance_df %>%
+  rownames_to_column(var = "variable") %>%
+  slice_max(n = 10, order_by = `%IncMSE`)
+```
+
+```{r}
+ggplot(importance_df_top_10, aes(x = `%IncMSE`, y = reorder(variable, `%IncMSE`))) +
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  theme_minimal() +
+  labs(title = "Top 10 Variables in Predicting Obesity for SIDS",
+       subtitle = "Top 10",
+       y = "SDG Indicator",
+       x = "Feature Importance (% Increase in Mean Squared Error)")
+```
+
+Now that we briefly spoke about some factors that contribute to obesity in the Pacific, lets take a look at what the machine predicts using the data provided in the report. Interestingly, the machine had predicted the following ten variables that contribute to obesity in the visualization above. First being particulate matter, followed by disaster costs, unemployment, state statistical performance, total renewable water resources, seats held by women in parliament, corruption perception, death by seismic activity, and linear shipping connectivity. Particulate matter, or particle pollution, is not a factor that anyone would think about in terms of obesity. But it makes sense! If an area is very industrialized or very city-like, there is a high chance of having a high rate of particulate matter in the area. This will cause a shift in growing foods to relying on a processed food diet because it is highly available and inexpensive. Because of that, there could be a spike in obesity rates in a general area. 
+
+
+Lets look closely at the particulate matter. We will use the following code: 
+
+```{r}
+pdp::partial(rf_obesity, pred.var = "n_sdg11_pm25", plot = TRUE)
+```
+
+In this graph, it shows that if the particulate matter score is high, the obesity rates are low.. Lets have a look at it again using another visualization and comparing it with another predicting variable the model provides. 
+
+```{r}
+pd <- pdp::partial(rf_obesity, pred.var = c("n_sdg11_pm25", "normalized_score_env_disastcost"))
+
+plotPartial(pd)
+```
+In this visualization, the y axis is SDG 11 and the x axis shows the environmental disaster costs. I chose these two because I would like to see if there would be a synergy between all three variables. The color key is the models prediction of SDG 2 Obesity.
+
+
+In this visualization, the x-axis is SDG 11 indicator of the annual mean concentration of particulate matter of less than 2.5 microns in diameter and the y-axis is the environmental natural disaster cost vulnerability indicator score. The colors are the predicted scores of obesity.
+The model's prediction is very interesting. As the SDG 11 and natural disaster indicators scores increase, the obesity score decreases. This is highly due to some nations in the data set have the lowest normalized scores for obesity (highest rates of obesity) with low scores of particulate matter. 
+
+
+
+
+
+
+
